@@ -7,13 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --bg-1:#1E1B4B; --bg-2:#4C1D95; --bg-3:#7C3AED; --bg-4:#0891B2;
-    --surface:rgba(255,255,255,0.07); --surface-strong:rgba(255,255,255,0.13);
+    --surface:rgba(255,255,255,0.10); --surface-strong:rgba(20,14,46,0.62);
     --border:rgba(255,255,255,0.18); --border-bright:rgba(167,139,250,0.55);
-    --text:#F5F3FF; --text-muted:#C7BEEF; --text-faint:#8C82BE;
+    --text:#FFFFFF; --text-muted:#E4DEFF; --text-faint:#BBB0EA;
     --violet:#A78BFA; --cyan:#22D3EE;
     --gradient:linear-gradient(135deg,#A78BFA 0%,#22D3EE 100%);
     --success:#34D399; --danger:#FB7185; --amber:#FBBF24;
@@ -31,6 +30,7 @@
 
   #netbg{position:fixed;inset:0;z-index:0;pointer-events:none;
     background:
+      linear-gradient(180deg, rgba(10,7,28,0.32), rgba(10,7,28,0.42)),
       radial-gradient(ellipse 800px 500px at 12% 8%, rgba(255,255,255,0.10), transparent 60%),
       radial-gradient(ellipse 700px 600px at 92% 92%, rgba(34,211,238,0.16), transparent 60%);
   }
@@ -100,7 +100,7 @@
   .field{margin-bottom:20px}
   .field label{display:block;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.03em;color:var(--text-muted);margin-bottom:8px}
   .field label .req{color:var(--cyan);margin-left:4px}
-  .field input,.field select,.field textarea{width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:11px;
+  .field input,.field select,.field textarea{width:100%;background:rgba(15,10,32,0.45);border:1px solid var(--border);border-radius:11px;
     padding:12px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:14.5px;transition:border-color .15s, background .15s}
   .field input::placeholder,.field textarea::placeholder{color:var(--text-faint)}
   .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--border-bright);background:rgba(167,139,250,.14)}
@@ -119,6 +119,23 @@
   .rate-card .rc-label{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted)}
   .rate-card .rc-value{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:var(--success)}
   .rate-card .rc-value span{font-size:12.5px;color:var(--text-faint);font-weight:500;font-family:'JetBrains Mono',monospace}
+
+  .vendor-section{display:none;margin-bottom:6px}
+  .vendor-section.show{display:block}
+  .vendor-hint{font-size:12.5px;color:var(--text-faint);margin:-6px 0 14px;max-width:60ch}
+  .vendor-lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  @media (max-width:540px){.vendor-lang-grid{grid-template-columns:1fr}}
+  .vendor-lang-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    border:1px solid var(--border);background:rgba(255,255,255,.05);border-radius:10px;padding:9px 12px}
+  .vendor-lang-row.active{border-color:var(--border-bright);background:rgba(167,139,250,.1)}
+  .vendor-lang-row .vl-name{font-family:'Inter',sans-serif;font-size:13.5px}
+  .vendor-lang-row .vl-input{width:64px;background:rgba(255,255,255,.06);border:1px solid var(--border);
+    border-radius:8px;padding:6px 8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;text-align:center}
+  .vendor-lang-row .vl-input:focus{outline:none;border-color:var(--border-bright)}
+  .vendor-total{display:flex;align-items:center;justify-content:space-between;
+    border:1px solid rgba(34,211,238,.35);background:rgba(34,211,238,.08);border-radius:11px;
+    padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text-muted);margin-bottom:8px}
+  .vendor-total b{color:var(--cyan);font-size:16px;font-family:'Space Grotesk',sans-serif}
 
   .submit-btn{width:100%;margin-top:8px;background:var(--gradient);color:#1E1B4B;border:none;border-radius:11px;
     padding:14px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;cursor:pointer;
@@ -197,7 +214,6 @@
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <div class="status-chip"><span class="dot"></span> registration open</div>
-      <div class="live-counter">◆ live · <b id="live-count">0</b> applied</div>
     </div>
   </div>
 
@@ -240,6 +256,17 @@
           <div class="rc-value" id="rc-value">$0 <span>USD</span></div>
         </div>
         <div class="rc-label" id="rc-track-label"></div>
+      </div>
+
+      <div class="vendor-section" id="vendor-team-section">
+        <div class="section-label">Team composition (Vendors only)</div>
+        <p class="vendor-hint">List how many native-speaker members you currently have available, per language. Payouts are calculated per completed 15-hour pair, per member.</p>
+        <div class="vendor-lang-grid" id="vendor-lang-grid"></div>
+        <div class="vendor-total">
+          <span>Total members across all languages</span>
+          <b id="vendor-total-count">0</b>
+        </div>
+        <div class="err" id="vendor-team-err">Please enter at least one member count for a language.</div>
       </div>
 
       <div class="section-label">Personal details</div>
@@ -365,23 +392,7 @@
   </div>
 
   <div class="admin-toggle">
-    <button id="admin-toggle-btn">admin · view &amp; export registry</button>
-  </div>
-
-  <div class="admin" id="admin-panel">
-    <div class="admin-head">
-      <h3>Applications</h3>
-      <span class="admin-count" id="admin-count">0 records</span>
-    </div>
-    <div style="margin-bottom:14px">
-      <button class="export-btn" id="export-btn" disabled>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Export to Excel (.xlsx)
-      </button>
-    </div>
-    <div class="admin-list" id="admin-list">
-      <div class="admin-empty">Loading registry…</div>
-    </div>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text-faint)">All submissions are logged directly to the project's Google Sheet.</span>
   </div>
 
 </div>
@@ -426,6 +437,7 @@ function currentTrack(){
 function updateTrackStyles(){
   optIndividual.classList.toggle('active', currentTrack()==='Individual');
   optVendor.classList.toggle('active', currentTrack()==='Vendor');
+  vendorTeamSection.classList.toggle('show', currentTrack()==='Vendor');
   updateRateDisplay();
 }
 trackRadios.forEach(r=> r.addEventListener('change', updateTrackStyles));
@@ -443,6 +455,37 @@ function updateRateDisplay(){
   }
 }
 langSelect.addEventListener('change', updateRateDisplay);
+
+// ---------- vendor team composition ----------
+const vendorTeamSection = document.getElementById('vendor-team-section');
+const vendorLangGrid = document.getElementById('vendor-lang-grid');
+const vendorTotalCount = document.getElementById('vendor-total-count');
+const vendorTeamErr = document.getElementById('vendor-team-err');
+
+Object.keys(RATES).forEach(lang=>{
+  const row = document.createElement('div');
+  row.className = 'vendor-lang-row';
+  row.innerHTML = `<span class="vl-name">${lang}</span><input type="number" min="0" step="1" class="vl-input" data-lang="${lang}" placeholder="0">`;
+  vendorLangGrid.appendChild(row);
+});
+
+function getVendorTeamData(){
+  const data = {};
+  let total = 0;
+  vendorLangGrid.querySelectorAll('.vl-input').forEach(input=>{
+    const val = parseInt(input.value, 10) || 0;
+    const row = input.closest('.vendor-lang-row');
+    row.classList.toggle('active', val > 0);
+    if(val > 0){ data[input.dataset.lang] = val; total += val; }
+  });
+  return { data, total };
+}
+
+vendorLangGrid.addEventListener('input', ()=>{
+  const { total } = getVendorTeamData();
+  vendorTotalCount.textContent = total;
+  if(total > 0) vendorTeamErr.style.display = 'none';
+});
 
 // ---------- payment method dynamic field ----------
 const payMethodSelect = document.getElementById('pay-method');
@@ -494,7 +537,6 @@ function genRegId(){
   for(let i=0;i<10;i++) id+=chars[Math.floor(Math.random()*16)];
   return id;
 }
-const STORAGE_PREFIX = 'speech-recording-app:';
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzF9MveoFxUzuvYLzIokC9OkBqaPCR2SItnQLPcC1YUiRsx2H7lH4rxa40XOO19BpSTHA/exec';
 
 async function sendToSheet(record){
@@ -511,38 +553,6 @@ async function sendToSheet(record){
     return false;
   }
 }
-
-async function saveRegistration(record){
-  try{
-    const result = await window.storage.set(STORAGE_PREFIX + record.regId, JSON.stringify(record), true);
-    return !!result;
-  }catch(e){ console.error('Storage error:', e); return false; }
-}
-
-async function fetchAllRegistrations(){
-  try{
-    const listResult = await window.storage.list(STORAGE_PREFIX, true);
-    if(!listResult || !listResult.keys) return [];
-    const records = [];
-    for(const key of listResult.keys){
-      try{
-        const r = await window.storage.get(key, true);
-        if(r && r.value) records.push(JSON.parse(r.value));
-      }catch(e){}
-    }
-    records.sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
-    return records;
-  }catch(e){ console.error('List error:', e); return []; }
-}
-
-async function refreshLiveCount(){
-  try{
-    const listResult = await window.storage.list(STORAGE_PREFIX, true);
-    document.getElementById('live-count').textContent = (listResult && listResult.keys) ? listResult.keys.length : 0;
-  }catch(e){}
-}
-refreshLiveCount();
-setInterval(refreshLiveCount, 8000);
 
 // ---------- validation & submit ----------
 const form = document.getElementById('reg-form');
@@ -565,6 +575,12 @@ function validate(data){
   setInvalid('f-gender', !data.gender); if(!data.gender) ok=false;
   setInvalid('f-paymethod', !data.payMethod); if(!data.payMethod) ok=false;
   setInvalid('f-pay-detail', !data.payDetail.trim()); if(!data.payDetail.trim()) ok=false;
+
+  if(currentTrack() === 'Vendor'){
+    const { total } = getVendorTeamData();
+    vendorTeamErr.style.display = total > 0 ? 'none' : 'block';
+    if(total === 0) ok = false;
+  }
   return ok;
 }
 
@@ -581,6 +597,14 @@ form.addEventListener('submit', async (e)=>{
   const lang = data.language;
   const payout = RATES[lang] ? RATES[lang][track] : null;
 
+  let vendorTeamBreakdown = '';
+  let vendorTeamTotal = '';
+  if(track === 'Vendor'){
+    const { data: teamData, total } = getVendorTeamData();
+    vendorTeamBreakdown = Object.entries(teamData).map(([l,c])=> `${l}: ${c}`).join(', ');
+    vendorTeamTotal = total;
+  }
+
   const record = {
     regId: genRegId(),
     track, language: lang, payout,
@@ -593,16 +617,16 @@ form.addEventListener('submit', async (e)=>{
     payDetail: data.payDetail.trim(),
     bankName: (data.bankName||'').trim(),
     bankBranch: (data.bankBranch||'').trim(),
+    vendorTeamBreakdown,
+    vendorTeamTotal,
     notes: (data.notes||'').trim(),
     timestamp: new Date().toISOString()
   };
 
-  const saved = await saveRegistration(record);
-  sendToSheet(record); // fire-and-forget to Google Sheet via Apps Script
+  await sendToSheet(record);
+
   submitBtn.disabled = false;
   submitBtn.textContent = 'Submit application';
-
-  if(!saved){ alert('Something went wrong saving your application. Please try again.'); return; }
 
   document.getElementById('c-id').textContent = record.regId;
   document.getElementById('c-name').textContent = record.name;
@@ -612,8 +636,6 @@ form.addEventListener('submit', async (e)=>{
 
   form.style.display = 'none';
   confirmBlock.classList.add('show');
-  refreshLiveCount();
-  if(adminPanelOpen) refreshAdminList();
 });
 
 document.getElementById('again-btn').addEventListener('click', ()=>{
@@ -621,75 +643,13 @@ document.getElementById('again-btn').addEventListener('click', ()=>{
   document.querySelectorAll('.field.invalid').forEach(f=>f.classList.remove('invalid'));
   rateCard.classList.remove('show');
   bankExtra.style.display = 'none';
+  vendorLangGrid.querySelectorAll('.vl-input').forEach(i=>{ i.value=''; i.closest('.vendor-lang-row').classList.remove('active'); });
+  vendorTotalCount.textContent = '0';
+  vendorTeamErr.style.display = 'none';
   updateTrackStyles();
   form.style.display = 'block';
   confirmBlock.classList.remove('show');
 });
-
-// ---------- admin panel ----------
-let adminPanelOpen = false;
-const adminPanel = document.getElementById('admin-panel');
-const adminList = document.getElementById('admin-list');
-const adminCount = document.getElementById('admin-count');
-const exportBtn = document.getElementById('export-btn');
-
-document.getElementById('admin-toggle-btn').addEventListener('click', async ()=>{
-  adminPanelOpen = !adminPanelOpen;
-  adminPanel.classList.toggle('show', adminPanelOpen);
-  if(adminPanelOpen) await refreshAdminList();
-});
-
-async function refreshAdminList(){
-  adminList.innerHTML = '<div class="admin-empty">Loading registry…</div>';
-  const records = await fetchAllRegistrations();
-  adminCount.textContent = records.length + (records.length===1 ? ' record' : ' records');
-  exportBtn.disabled = records.length === 0;
-  if(records.length === 0){
-    adminList.innerHTML = '<div class="admin-empty">No applications yet.</div>';
-    return;
-  }
-  adminList.innerHTML = '';
-  for(const r of records){
-    const row = document.createElement('div');
-    row.className = 'admin-row';
-    row.innerHTML = `<span class="who">${escapeHtml(r.name)} — ${escapeHtml(r.track)} · ${escapeHtml(r.language)}</span><span class="gh">$${r.payout}</span>`;
-    adminList.appendChild(row);
-  }
-  exportBtn.onclick = ()=> exportToExcel(records);
-}
-
-function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = str || '';
-  return div.innerHTML;
-}
-
-function exportToExcel(records){
-  const rows = records.map(r=>({
-    'Reg ID': r.regId,
-    'Applicant Type': r.track,
-    'Language': r.language,
-    'Payout (USD)': r.payout,
-    'Full Name': r.name,
-    'WhatsApp': r.whatsapp,
-    'Email': r.email,
-    'Country': r.country,
-    'Gender': r.gender,
-    'Payment Method': r.payMethod,
-    'Payment Detail': r.payDetail,
-    'Bank Name': r.bankName,
-    'Bank Branch': r.bankBranch,
-    'Notes': r.notes,
-    'Submitted At': new Date(r.timestamp).toLocaleString()
-  }));
-  const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [
-    {wch:12},{wch:14},{wch:12},{wch:12},{wch:20},{wch:16},{wch:26},{wch:14},{wch:10},{wch:22},{wch:26},{wch:20},{wch:16},{wch:30},{wch:20}
-  ];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Applications');
-  XLSX.writeFile(wb, `speech_recording_applications_${new Date().toISOString().slice(0,10)}.xlsx`);
-}
 </script>
 
 </body>
